@@ -109,7 +109,6 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
 }
 
 
-<<<<<<< HEAD
 # # EXAMPLE USAGE ----------
 # 
 # files=list("20150807_KBayRecov_Mcap_2_data.csv", "20150808_KBayRecov_Mcap_1_data.csv")
@@ -119,14 +118,5 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
 #                copy.number=list(C=10, D=2, Mcap=1),
 #                ploidy=list(C=1, D=1, Mcap=2),
 #                extract=list(C=0.813, D=0.813, Mcap=0.982))
-=======
-# EXAMPLE USAGE ----------
 
-files=list("20150807_KBayRecov_Mcap_2_data.csv", "20150808_KBayRecov_Mcap_1_data.csv")
 
-df <- steponeR(files=files, target.ratios=c("C.Mcap", "D.Mcap"), 
-               fluor.norm=list(C=2.26827, D=0, Mcap=0.84815),
-               copy.number=list(C=10, D=2, Mcap=1),
-               ploidy=list(C=1, D=1, Mcap=2),
-               extract=list(C=0.813, D=0.813, Mcap=0.982))
->>>>>>> a77136a5b4e4b439fe02f92499f27f7f7b71aa8d
