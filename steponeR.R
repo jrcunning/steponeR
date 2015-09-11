@@ -2,10 +2,18 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
                      copy.number=NULL, ploidy=NULL, extract=NULL) {
   require(plyr); require(reshape2)
   if(is.null(files)) stop("No data files specified")
-  # Import data from files
-  data <- do.call("rbind", lapply(files, function(file) {
-    data.frame(Filename=file, read.csv(file, skip=6, na.strings="Undetermined"))
-  }))
+#   # Import data from files
+#   data <- do.call("rbind", lapply(files, function(file) {
+#     data.frame(Filename=file, read.csv(file, skip=7, na.strings="Undetermined",
+#                                        blank.lines.skip=T))
+#   }))
+  # New import strategy
+  data <- lapply(files, function(x) {
+    temp <- readLines(x)
+    linesToSkip <- grep("^Well", temp)-1
+    read.csv(text = temp, skip = linesToSkip)
+  })
+  data <- do.call("rbind", data)
   # Change C_ to CT
   colnames(data) <- sub(x=colnames(data), pattern="C_", replacement="CT")
   # Subset CT and sample metadata
