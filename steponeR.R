@@ -14,12 +14,12 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   ntc <- data[which(data$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
   if(!empty(ntc)) data <- data[!rownames(data) %in% rownames(ntc), ]
-  # Remove wells with no sample or no target
-  nosample <- data[which(data$Sample.Name==""), ]
-  if(!empty(nosample)) {
-    apply(nosample, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no sample")))
-    data <- data[!rownames(data) %in% rownames(nosample), ]
-  }
+  # Remove wells with no target
+#   nosample <- data[which(data$Sample.Name==""), ]
+#   if(!empty(nosample)) {
+#     apply(nosample, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no sample")))
+#     data <- data[!rownames(data) %in% rownames(nosample), ]
+#   }
   notarget <- data[which(data$Target.Name==""), ]
   if(!empty(notarget)) {
     apply(notarget, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no target")))
