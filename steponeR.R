@@ -5,8 +5,8 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   # Import data from files
   data <- lapply(files, function(x) {
     temp <- readLines(x)
-    linesToSkip <- grep("^Well", temp)-1
-    read.csv(text = temp, skip = linesToSkip)
+    linesToSkip <- grep("^Well", temp) - 1
+    read.csv(text=temp, skip=linesToSkip)
   })
   data <- do.call("rbind", data)
   # Change C_ to CT
@@ -18,11 +18,6 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
   if(!empty(ntc)) data <- data[!rownames(data) %in% rownames(ntc), ]
   # Remove wells with no target
-#   nosample <- data[which(data$Sample.Name==""), ]
-#   if(!empty(nosample)) {
-#     apply(nosample, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no sample")))
-#     data <- data[!rownames(data) %in% rownames(nosample), ]
-#   }
   notarget <- data[which(data$Target.Name==""), ]
   if(!empty(notarget)) {
     apply(notarget, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no target")))
@@ -32,8 +27,6 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   data <- droplevels(data)
   # Create unique sample-plate IDs to distinguish samples run on multiple plates
   data$Sample.Plate <- interaction(data$Sample.Name, data$Filename, sep="~")
-  
-
   # Calculate mean and sd of technical replicates for each target for each sample run
   ctmeans <- dcast(data, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="CT")  # na.rm=F
   colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
@@ -44,13 +37,10 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   # Split Sample.Plate column into Plate and Sample.Name columns
   result <- cbind(colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
                   result[, -1])
-  #return(result)
-  
-
   # List targets present in data
   targets <- levels(data$Target.Name)
   
-  # Calculations
+  # Optional data adjustments
   # Fluorescence normalization
   if(!is.null(fluor.norm)) {
     if(is.list(fluor.norm)) {
