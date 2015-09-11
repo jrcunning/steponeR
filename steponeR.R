@@ -2,12 +2,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
                      copy.number=NULL, ploidy=NULL, extract=NULL) {
   require(plyr); require(reshape2)
   if(is.null(files)) stop("No data files specified")
-#   # Import data from files
-#   data <- do.call("rbind", lapply(files, function(file) {
-#     data.frame(Filename=file, read.csv(file, skip=7, na.strings="Undetermined",
-#                                        blank.lines.skip=T))
-#   }))
-  # New import strategy
+  # Import data from files
   data <- lapply(files, function(x) {
     temp <- readLines(x)
     linesToSkip <- grep("^Well", temp)-1
@@ -114,6 +109,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
 }
 
 
+# EXAMPLE USAGE ----------
 
 files=list("20150807_KBayRecov_Mcap_2_data.csv", "20150808_KBayRecov_Mcap_1_data.csv")
 
