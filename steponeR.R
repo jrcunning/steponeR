@@ -12,7 +12,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   # Change C_ to CT
   colnames(data) <- sub(x=colnames(data), pattern="C_", replacement="CT")
   # Subset CT and sample metadata
-  data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT")]
+  data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT", "Quantity")]
   # Check and remove NTC wells
   ntc <- data[which(data$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
