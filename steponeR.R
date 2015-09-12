@@ -1,3 +1,4 @@
+
 steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
                      copy.number=NULL, ploidy=NULL, extract=NULL) {
   require(plyr); require(reshape2)
@@ -6,21 +7,24 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   data <- lapply(files, function(x) {
     temp <- suppressWarnings(readLines(x))
     linesToSkip <- grep("^Well", temp) - 1
-    data.frame(Filename=as.character(x), read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
+    data.frame(Filename=basename(x),
+               read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
   })
   data <- do.call("rbind", data)
   # Change C_ to CT
   colnames(data) <- sub(x=colnames(data), pattern="C_", replacement="CT")
+  # Check and remove NTC wells
+  ntc <- data[which(data$Task=="NTC"), ]
+  if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
+  if(!empty(ntc)) data <- droplevels(data[!rownames(data) %in% rownames(ntc), ])
+  # Check remaining tasks
+  tasks <- levels(data$Task)
   # Subset CT and sample metadata
-  if("STANDARD" %in% data$Task) {
+  if("STANDARD" %in% tasks) {
     data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT", "Quantity")]
   } else {
     data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT")]
   }
-  # Check and remove NTC wells
-  ntc <- data[which(data$Task=="NTC"), ]
-  if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
-  if(!empty(ntc)) data <- data[!rownames(data) %in% rownames(ntc), ]
   # Remove wells with no target
   notarget <- data[which(data$Target.Name==""), ]
   if(!empty(notarget)) {
@@ -31,16 +35,24 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   data <- droplevels(data)
   # Create unique sample-plate IDs to distinguish samples run on multiple plates
   data$Sample.Plate <- interaction(data$Sample.Name, data$Filename, sep="~")
+  # Separate STANDARDS from UNKNOWNS
+  std <- data[which(data$Task=="STANDARD"), ]
+  unk <- data[which(data$Task=="UNKNOWN"), ]
+  # Process STANDARDS
+  std
+  
+  # Process UNKNOWNS
   # Calculate mean and sd of technical replicates for each target for each sample run
-  ctmeans <- dcast(data, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="CT")  # na.rm=F
+  ctmeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="CT")  # na.rm=F
   colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
-  ctsds <- dcast(data, Sample.Plate ~ Target.Name, sd, na.rm=F, value.var="CT")
+  ctsds <- dcast(unk, Sample.Plate ~ Target.Name, sd, na.rm=F, value.var="CT")
   colnames(ctsds) <- c(colnames(ctsds)[1], paste(colnames(ctsds)[-1], "CT.sd", sep="."))
-  if("Quantity" %in% colnames(data)) {
-    quants <- dcast(data, Sample.Plate ~ "Quantity", mean, na.rm=F, value.var="Quantity")
+  if("Quantity" %in% colnames(unk)) {
+    quants <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="Quantity")
+    colnames(quants) <- c(colnames(quants)[1], paste(colnames(quants)[-1], "Quant", sep="."))
   }
   # Combine CT means, SDs, quantities
-  if("Quantity" %in% colnames(data)) {
+  if(exists("quants")) {
     result <- join_all(list(ctmeans, ctsds, quants), by="Sample.Plate")
   } else {
     result <- join_all(list(ctmeans, ctsds), by="Sample.Plate")
@@ -106,7 +118,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
       result[, ratio] <- result[, ratio] / eeratio
     }
   }
-  return(result)
+  return(list(standards=std, unknowns=result))
 }
 
 
