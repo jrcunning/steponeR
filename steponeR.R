@@ -4,15 +4,19 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   if(is.null(files)) stop("No data files specified")
   # Import data from files
   data <- lapply(files, function(x) {
-    temp <- readLines(x)
+    temp <- suppressWarnings(readLines(x))
     linesToSkip <- grep("^Well", temp) - 1
-    read.csv(text=temp, skip=linesToSkip)
+    data.frame(Filename=as.character(x), read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
   })
   data <- do.call("rbind", data)
   # Change C_ to CT
   colnames(data) <- sub(x=colnames(data), pattern="C_", replacement="CT")
   # Subset CT and sample metadata
-  data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT", "Quantity")]
+  if("STANDARD" %in% data$Task) {
+    data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT", "Quantity")]
+  } else {
+    data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT")]
+  }
   # Check and remove NTC wells
   ntc <- data[which(data$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
@@ -32,8 +36,15 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
   ctsds <- dcast(data, Sample.Plate ~ Target.Name, sd, na.rm=F, value.var="CT")
   colnames(ctsds) <- c(colnames(ctsds)[1], paste(colnames(ctsds)[-1], "CT.sd", sep="."))
-  # Combine CT means, SDs
-  result <- merge(ctmeans, ctsds)
+  if("Quantity" %in% colnames(data)) {
+    quants <- dcast(data, Sample.Plate ~ "Quantity", mean, na.rm=F, value.var="Quantity")
+  }
+  # Combine CT means, SDs, quantities
+  if("Quantity" %in% colnames(data)) {
+    result <- join_all(list(ctmeans, ctsds, quants), by="Sample.Plate")
+  } else {
+    result <- join_all(list(ctmeans, ctsds), by="Sample.Plate")
+  }
   # Split Sample.Plate column into Plate and Sample.Name columns
   result <- cbind(colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
                   result[, -1])
