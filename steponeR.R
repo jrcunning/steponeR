@@ -4,19 +4,19 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   require(plyr); require(reshape2)
   if(is.null(files)) stop("No data files specified")
   # Import data from files
-  data <- lapply(files, function(x) {
+  data0 <- lapply(files, function(x) {
     temp <- suppressWarnings(readLines(x))
     linesToSkip <- grep("^Well", temp) - 1
     data.frame(Filename=basename(x),
                read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
   })
-  data <- do.call("rbind", data)
+  data0 <- do.call("rbind", data0)
   # Change C_ to CT
-  colnames(data) <- sub(x=colnames(data), pattern="C_", replacement="CT")
+  colnames(data0) <- sub(x=colnames(data0), pattern="C_", replacement="CT")
   # Check and remove NTC wells
-  ntc <- data[which(data$Task=="NTC"), ]
+  ntc <- data0[which(data0$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
-  if(!empty(ntc)) data <- droplevels(data[!rownames(data) %in% rownames(ntc), ])
+  if(!empty(ntc)) data <- droplevels(data0[!rownames(data0) %in% rownames(ntc), ])
   # Check remaining tasks
   tasks <- levels(data$Task)
   # Subset CT and sample metadata
@@ -35,27 +35,32 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   data <- droplevels(data)
   # Create unique sample-plate IDs to distinguish samples run on multiple plates
   data$Sample.Plate <- interaction(data$Sample.Name, data$Filename, sep="~")
-  # Separate STANDARDS from UNKNOWNS
-  std <- data[which(data$Task=="STANDARD"), ]
+  # Separate UNKNOWNS from STANDARDS
   unk <- data[which(data$Task=="UNKNOWN"), ]
   # Process STANDARDS
-  std
-  
-  # Process UNKNOWNS
-  # Calculate mean and sd of technical replicates for each target for each sample run
-  ctmeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="CT")  # na.rm=F
-  colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
-  ctsds <- dcast(unk, Sample.Plate ~ Target.Name, sd, na.rm=F, value.var="CT")
-  colnames(ctsds) <- c(colnames(ctsds)[1], paste(colnames(ctsds)[-1], "CT.sd", sep="."))
-  if("Quantity" %in% colnames(unk)) {
-    quants <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=F, value.var="Quantity")
-    colnames(quants) <- c(colnames(quants)[1], paste(colnames(quants)[-1], "Quant", sep="."))
+  if("STANDARD" %in% tasks) {
+    # Process STANDARDS
+    std <- data[which(data$Task=="STANDARD"), ]
+    std.lm <- lm(log10(Quantity) ~ CT * Target.Name * Filename, data=std)
+    # Use standard curves to calculate quantities for unknowns
+    unk$copies <- 10^predict(std.lm, newdata = unk[, c("CT", "Target.Name", "Filename")])
+    copymeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="copies")
+    colnames(copymeans) <- c(colnames(copymeans)[1], paste(colnames(copymeans)[-1], "copies", sep="."))
   }
-  # Combine CT means, SDs, quantities
-  if(exists("quants")) {
-    result <- join_all(list(ctmeans, ctsds, quants), by="Sample.Plate")
+  # Calculate mean and sd of technical replicates for each target for each sample run
+  ctmeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="CT")  # na.rm=F
+  colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
+  ctsds <- dcast(unk, Sample.Plate ~ Target.Name, sd, na.rm=T, value.var="CT")
+  colnames(ctsds) <- c(colnames(ctsds)[1], paste(colnames(ctsds)[-1], "CT.sd", sep="."))
+  techreps <- dcast(unk, Sample.Plate ~ Target.Name, value.var="CT",
+                    fun.aggregate = function(x) length(which(!is.na(x))))
+  colnames(techreps) <- c(colnames(techreps)[1], paste(colnames(techreps)[-1], "reps", sep="."))
+  
+  # Combine CT means, SDs, techreps, quantities
+  if(exists("copymeans")) {
+    result <- join_all(list(ctmeans, ctsds, techreps, copymeans), by="Sample.Plate")
   } else {
-    result <- join_all(list(ctmeans, ctsds), by="Sample.Plate")
+    result <- join_all(list(ctmeans, ctsds, techreps), by="Sample.Plate")
   }
   # Split Sample.Plate column into Plate and Sample.Name columns
   result <- cbind(colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
@@ -118,7 +123,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
       result[, ratio] <- result[, ratio] / eeratio
     }
   }
-  return(list(standards=std, unknowns=result))
+  return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
 }
 
 
