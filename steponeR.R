@@ -10,7 +10,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
     data.frame(Filename=basename(x),
                read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
   })
-  data0 <- do.call("rbind", data0)
+  data0 <- rbind.fill(data0)
   # Change C_ to CT
   colnames(data0) <- sub(x=colnames(data0), pattern="C_", replacement="CT")
   # Check and remove NTC wells
@@ -123,7 +123,8 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
       result[, ratio] <- result[, ratio] / eeratio
     }
   }
-  return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
+  if("STANDARD" %in% tasks) return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
+  else return(list(unknowns=unk, result=result))
 }
 
 
