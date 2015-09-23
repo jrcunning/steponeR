@@ -7,8 +7,11 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   data0 <- lapply(files, function(x) {
     temp <- suppressWarnings(readLines(x))
     linesToSkip <- grep("^Well", temp) - 1
-    data.frame(Filename=basename(x),
-               read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
+    dat <- data.frame(Filename=basename(x),
+                      read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
+    dat <- dat[which(dat$Target.Name!=""), ]  # Omit empty wells
+    dat$Sample.Name <- as.character(dat$Sample.Name)  # Convert sample names to character
+    dat
   })
   data0 <- rbind.fill(data0)
   # Change C_ to CT
