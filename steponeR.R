@@ -1,4 +1,3 @@
-
 steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
                      copy.number=NULL, ploidy=NULL, extract=NULL) {
   require(plyr); require(reshape2)
@@ -19,7 +18,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   # Check and remove NTC wells
   ntc <- data0[which(data0$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
-  if(!empty(ntc)) data <- droplevels(data0[!rownames(data0) %in% rownames(ntc), ])
+  data <- droplevels(data0[!rownames(data0) %in% rownames(ntc), ])
   # Check remaining tasks
   tasks <- levels(data$Task)
   # Subset CT and sample metadata
@@ -131,14 +130,19 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
 }
 
 
-# # EXAMPLE USAGE ----------
-# 
+# # # EXAMPLE USAGE ----------
+# # 
 # files=list("20150807_KBayRecov_Mcap_2_data.csv", "20150808_KBayRecov_Mcap_1_data.csv")
-# 
+# # 
 # df <- steponeR(files=files, target.ratios=c("C.Mcap", "D.Mcap"), 
 #                fluor.norm=list(C=2.26827, D=0, Mcap=0.84815),
 #                copy.number=list(C=10, D=2, Mcap=1),
 #                ploidy=list(C=1, D=1, Mcap=2),
 #                extract=list(C=0.813, D=0.813, Mcap=0.982))
+# #
+# # Raw data for unknowns
+# df$unknowns
+# # Target ratio results
+# df$result
 
 
