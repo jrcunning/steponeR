@@ -46,9 +46,11 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
     std <- std[, c("Quantity", "CT", names(which(sapply(std[,c("Target.Name", "Filename")], function(x) nlevels(x) > 1))))]
     std.lm <- lm(log10(Quantity) ~ ., data=std)
     # Use standard curves to calculate quantities for unknowns
-    unk$copies <- 10^predict(std.lm, newdata = unk[, c("CT", "Target.Name", "Filename")])
-    copymeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="copies")
-    colnames(copymeans) <- c(colnames(copymeans)[1], paste(colnames(copymeans)[-1], "copies", sep="."))
+    if("UNKNOWN" %in% tasks) {
+      unk$copies <- 10^predict(std.lm, newdata = unk[, c("CT", "Target.Name", "Filename")])
+      copymeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="copies")
+      colnames(copymeans) <- c(colnames(copymeans)[1], paste(colnames(copymeans)[-1], "copies", sep="."))
+    }
   }
   # Calculate mean and sd of technical replicates for each target for each sample run
   ctmeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="CT")  # na.rm=F
