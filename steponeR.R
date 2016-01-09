@@ -130,6 +130,9 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
       }
     }
   }
+  else {
+    result <- NULL
+  }
   if("STANDARD" %in% tasks) return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
   else return(list(unknowns=unk, result=result))
 }
