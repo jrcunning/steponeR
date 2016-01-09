@@ -43,7 +43,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   if("STANDARD" %in% tasks) {
     # Process STANDARDS
     std <- data[which(data$Task=="STANDARD"), ]
-    std <- std[, c("CT", names(which(sapply(std, function(x) nlevels(x) > 1))))]
+    std <- std[, c("Quantity", "CT", names(which(sapply(std, function(x) nlevels(x) > 1))))]
     std.lm <- lm(log10(Quantity) ~ ., data=std)
     # Use standard curves to calculate quantities for unknowns
     unk$copies <- 10^predict(std.lm, newdata = unk[, c("CT", "Target.Name", "Filename")])
