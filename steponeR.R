@@ -8,13 +8,17 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
     linesToSkip <- grep("^Well", temp) - 1
     dat <- data.frame(Filename=basename(x),
                       read.csv(text=temp, skip=linesToSkip, na.strings="Undetermined"))
-    dat <- dat[which(dat$Target.Name!=""), ]  # Omit empty wells
-    dat$Sample.Name <- as.character(dat$Sample.Name)  # Convert sample names to character
+    #dat <- dat[which(dat$Target.Name!=""), ]  # Omit empty wells
+    dat <- dat[which(dat[, grep("Target", colnames(dat), value=T)]!=""), ] # Omit empty wells using regex
+    #dat$Sample.Name <- as.character(dat$Sample.Name)  # Convert sample names to character
+    dat[, grep("Sample", colnames(dat), value=T)] <- as.character(dat[, grep("Sample", colnames(dat), value=T)]) # Convert sample names to character using regex
     dat
   })
   data0 <- rbind.fill(data0)
-  # Change C_ to CT
-  colnames(data0) <- sub(x=colnames(data0), pattern="C_", replacement="CT")
+  # Change column name C. to CT
+  colnames(data0) <- sub(x=colnames(data0), pattern="C.$", replacement="CT")
+  # REGEX FOR COLUMN NAMES TO GET
+  columns <- 
   # Check and remove NTC wells
   ntc <- data0[which(data0$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
@@ -23,6 +27,7 @@ steponeR <- function(files=NULL, target.ratios=NULL, fluor.norm=NULL,
   tasks <- levels(data$Task)
   # Subset CT and sample metadata
   if("STANDARD" %in% tasks) {
+    #data <- data[, grep("Filename|Well|Sample|Target|Task|CT|Quantity", colnames(data), value=TRUE)]
     data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT", "Quantity")]
   } else {
     data <- data[, c("Filename", "Well", "Sample.Name", "Target.Name", "Task", "CT")]
