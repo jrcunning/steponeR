@@ -21,7 +21,7 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
   # Change column name C. to CT
   colnames(data0) <- sub(x=colnames(data0), pattern="C.$", replacement="CT")
   # REGEX FOR COLUMN NAMES TO GET
-  columns <- 
+  #columns <- 
   # Check and remove NTC wells
   ntc <- data0[which(data0$Task=="NTC"), ]
   if(any(!is.na(ntc$CT))) warning("Template detected in NTC: interpret data with caution")
@@ -86,10 +86,10 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
     # Fluorescence normalization
     if(!is.null(fluor.norm)) {
       if(is.list(fluor.norm)) {
-        if(any(!names(fluor.norm) %in% targets)) {
-          warning(paste(names(fluor.norm)[which(!names(fluor.norm) %in% targets)], "not a valid Target"))
+        if (any(!names(fluor.norm) %in% targets)) {
+          warning(paste(names(fluor.norm)[which(!names(fluor.norm) %in% targets)], "not a valid Target\n"))
         }
-        for (fluor in names(fluor.norm)) {
+        for (fluor in names(targets)) { ### in targets
           result[, paste(fluor, "CT.mean", sep=".")] <- result[, paste(fluor, "CT.mean", sep=".")] - fluor.norm[[fluor]]
         }
       } else {
@@ -107,14 +107,16 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
         target.ratios <- target.ratios[-which(unlist(lapply(ratios, length))!=2)]
       }
       # Calculate ratios
-      for(ratio in target.ratios) {
+      valid <- unlist(lapply(ratios, function(r) !any(!sapply(r, function(x) x %in% targets))))
+      if (any(valid==F)) warning(paste("Invalid target ratio:", target.ratios[!valid], "\n"))
+      for(ratio in target.ratios[valid]) {
         num <- strsplit(ratio, split=".", fixed=T)[[1]][1]
         denom <- strsplit(ratio, split=".", fixed=T)[[1]][2]
         result[, ratio] <- 2^(result[, paste(denom, "CT.mean", sep=".")] - result[, paste(num, "CT.mean", sep=".")])
       }
     }
     if(!is.null(copy.number)) {
-      for(ratio in target.ratios) {
+      for(ratio in target.ratios[valid]) {
         num <- strsplit(ratio, split=".", fixed=T)[[1]][1]
         denom <- strsplit(ratio, split=".", fixed=T)[[1]][2]
         cnratio <- copy.number[[num]] / copy.number[[denom]]
@@ -122,7 +124,7 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
       }
     }
     if(!is.null(ploidy)) {
-      for(ratio in target.ratios) {
+      for(ratio in target.ratios[valid]) {
         num <- strsplit(ratio, split=".", fixed=T)[[1]][1]
         denom <- strsplit(ratio, split=".", fixed=T)[[1]][2]
         pratio <- ploidy[[num]] / ploidy[[denom]]
@@ -130,7 +132,7 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
       }
     }
     if(!is.null(extract)) {
-      for(ratio in target.ratios) {
+      for(ratio in target.ratios[valid]) {
         num <- strsplit(ratio, split=".", fixed=T)[[1]][1]
         denom <- strsplit(ratio, split=".", fixed=T)[[1]][2]
         eeratio <- extract[[num]] / extract[[denom]]
