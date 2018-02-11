@@ -89,7 +89,7 @@ steponeR <- function(files=NULL, delim=",", target.ratios=NULL, fluor.norm=NULL,
         if (any(!names(fluor.norm) %in% targets)) {
           warning(paste(names(fluor.norm)[which(!names(fluor.norm) %in% targets)], "not a valid Target\n"))
         }
-        for (fluor in names(targets)) { ### in targets
+        for (fluor in targets) { ### in targets
           result[, paste(fluor, "CT.mean", sep=".")] <- result[, paste(fluor, "CT.mean", sep=".")] - fluor.norm[[fluor]]
         }
       } else {
