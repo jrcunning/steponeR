@@ -60,7 +60,8 @@
 
 steponeR <- function(files, delim=",", target.ratios, fluor.norm,
                      copy.number, ploidy, extract) {
-  require(plyr); require(reshape2)
+  #require(plyr) 
+  require(reshape2)
   if(is.null(files)) stop("No data files specified")
   # Import data from files
   data0 <- lapply(files, function(x) {
