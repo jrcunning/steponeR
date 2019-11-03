@@ -60,8 +60,8 @@
 
 steponeR <- function(files, delim=",", target.ratios, fluor.norm,
                      copy.number, ploidy, extract) {
-  require(plyr)
-  require(reshape2)
+  #require(plyr)
+  #require(reshape2)
   if(is.null(files)) stop("No data files specified")
   # Import data from files
   data0 <- lapply(files, function(x) {
@@ -127,9 +127,9 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
 
     # Combine CT means, SDs, techreps, quantities
     if(exists("copymeans")) {
-      result <- join_all(list(ctmeans, ctsds, techreps, copymeans), by="Sample.Plate")
+      result <- plyr::join_all(list(ctmeans, ctsds, techreps, copymeans), by="Sample.Plate")
     } else {
-      result <- join_all(list(ctmeans, ctsds, techreps), by="Sample.Plate")
+      result <- plyr::join_all(list(ctmeans, ctsds, techreps), by="Sample.Plate")
     }
     # Split Sample.Plate column into Plate and Sample.Name columns
     result <- cbind(colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
@@ -200,6 +200,5 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
   }
   if("STANDARD" %in% tasks) return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
   else return(list(unknowns=unk, result=result))
-  detach(plyr)
 }
 
