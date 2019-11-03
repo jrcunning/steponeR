@@ -92,7 +92,7 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
   }
   # Remove wells with no target
   notarget <- data[which(data$Target.Name==""), ]
-  if(!empty(notarget)) {
+  if(!plyr::empty(notarget)) {
     apply(notarget, 1, function(x) message(paste("Well", x["Well"], "in", x["Filename"], "discarded: no target")))
     data <- data[!rownames(data) %in% rownames(notarget), ]
   }
