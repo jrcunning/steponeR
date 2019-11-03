@@ -132,7 +132,7 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
       result <- plyr::join_all(list(ctmeans, ctsds, techreps), by="Sample.Plate")
     }
     # Split Sample.Plate column into Plate and Sample.Name columns
-    result <- cbind(colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
+    result <- cbind(reshape2::colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
                     result[, -1])
     # List targets present in data
     targets <- levels(data$Target.Name)
