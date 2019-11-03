@@ -111,17 +111,17 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
     # Use standard curves to calculate quantities for unknowns
     if("UNKNOWN" %in% tasks) {
       unk$copies <- 10^predict(std.lm, newdata = unk[, c("CT", "Target.Name", "Filename")])
-      copymeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="copies")
+      copymeans <- reshape2::(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="copies")
       colnames(copymeans) <- c(colnames(copymeans)[1], paste(colnames(copymeans)[-1], "copies", sep="."))
     }
   }
   # Calculate mean and sd of technical replicates for each target for each sample run
   if(nrow(unk)!=0) {
-    ctmeans <- dcast(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="CT")  # na.rm=F
+    ctmeans <- reshape2::(unk, Sample.Plate ~ Target.Name, mean, na.rm=T, value.var="CT")  # na.rm=F
     colnames(ctmeans) <- c(colnames(ctmeans)[1], paste(colnames(ctmeans)[-1], "CT.mean", sep="."))
-    ctsds <- dcast(unk, Sample.Plate ~ Target.Name, sd, na.rm=T, value.var="CT")
+    ctsds <- reshape2::(unk, Sample.Plate ~ Target.Name, sd, na.rm=T, value.var="CT")
     colnames(ctsds) <- c(colnames(ctsds)[1], paste(colnames(ctsds)[-1], "CT.sd", sep="."))
-    techreps <- dcast(unk, Sample.Plate ~ Target.Name, value.var="CT",
+    techreps <- reshape2::(unk, Sample.Plate ~ Target.Name, value.var="CT",
                       fun.aggregate = function(x) length(which(!is.na(x))))
     colnames(techreps) <- c(colnames(techreps)[1], paste(colnames(techreps)[-1], "reps", sep="."))
 
