@@ -60,7 +60,7 @@
 
 steponeR <- function(files, delim=",", target.ratios, fluor.norm,
                      copy.number, ploidy, extract) {
-  #require(plyr)
+  require(plyr)
   require(reshape2)
   if(is.null(files)) stop("No data files specified")
   # Import data from files
@@ -74,7 +74,7 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
     dat[, grep("Sample", colnames(dat), value=T)] <- as.character(dat[, grep("Sample", colnames(dat), value=T)]) # Convert sample names to character using regex
     dat
   })
-  data0 <- rbind.fill(data0)
+  data0 <- plyr::rbind.fill(data0)
   # Change column name C. to CT
   colnames(data0) <- sub(x=colnames(data0), pattern="C.$", replacement="CT")
   # Check and remove NTC wells
@@ -200,5 +200,6 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
   }
   if("STANDARD" %in% tasks) return(list(standards=list(data=std, lm=std.lm), unknowns=unk, result=result))
   else return(list(unknowns=unk, result=result))
+  detach(plyr)
 }
 
