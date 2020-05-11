@@ -135,7 +135,7 @@ steponeR <- function(files, delim=",", target.ratios, fluor.norm,
     result <- cbind(reshape2::colsplit(as.character(result$Sample.Plate), pattern="~", names=c("Sample.Name", "File.Name")),
                     result[, -1])
     # List targets present in data
-    targets <- levels(data$Target.Name)
+    targets <- unique(data$Target.Name)
 
     # Optional data adjustments
     # Fluorescence normalization
